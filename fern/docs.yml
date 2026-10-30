@@ -1,10 +1,15 @@
+# yaml-language-server: $schema=https://schema.buildwithfern.dev/docs-yml.json
+
 instances:
   - url: inpeace-test.docs.buildwithfern.com
-title: Fern Docs Starter
+
+title: InPeace Docs
+
 layout:
-  searchbar-placement: header
+  searchbar-placement: sidebar
   page-width: full
-  tabs-placement: header
+  tabs-placement: sidebar
+
 tabs:
   home:
     display-name: Docs
@@ -12,6 +17,7 @@ tabs:
   API Reference:
     display-name: API Reference
     icon: puzzle
+
 navigation:
   - tab: home
     layout:
@@ -35,8 +41,6 @@ navigation:
           - page: Support
             path: docs/pages/support.mdx
             icon: fa-duotone fa-headset
-          - page: Test Page
-            path: ./docs/pages/test-page.mdx
       - section: Changelog
         contents:
           - changelog: docs/changelog
@@ -47,41 +51,36 @@ navigation:
           - page: API reference
             path: docs/pages/api-reference-overview.mdx
             icon: fa-duotone fa-book
-      - api: Plant Store API
-        layout:
-          - section: Plants
-            referenced-packages:
-              - plant
-            contents: []
-          - section: Users
-            referenced-packages:
-              - user
-            contents: []
-navbar-links:
-  - type: minimal
-    text: Fork this repo
-    url: https://github.com/fern-api/docs-starter
-  - type: filled
-    text: Dashboard
-    url: https://dashboard.buildwithfern.com
-  - type: github
-    value: https://github.com/fern-api/fern
+      - api: API InPeace
+   
 colors:
   accent-primary:
-    dark: '#70E155'
-    light: '#008700'
+    dark: "#1DA1D9"
+    light: "#1DA1D9"
   background:
-    dark: '#111113'
-    light: '#FFFFFF'
+    dark: "#111113"
+    light: "#F8FCFE"
+  border:
+    dark: "#2A2F33"
+    light: "#CAD3D7"
+  card-background:
+    dark: "#1A1B1E"
+    light: "#F2F4F6"
+
 theme:
+  body: canvas
   page-actions: toolbar
   footer-nav: minimal
+
 logo:
-  dark: docs/assets/logo-dark.svg
-  light: docs/assets/logo.svg
-  height: 20
-  href: https://buildwithfern.com
+  dark: docs/assets/logo-inpeace.png
+  light: docs/assets/logo-inpeace.png
+  height: 28
+  href: https://inpeaceapp.com
+
 favicon: docs/assets/favicon.svg
+
 css: styles.css
+
 metadata:
   og:dynamic: true
