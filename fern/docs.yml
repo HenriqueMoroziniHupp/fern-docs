@@ -1,15 +1,10 @@
-# yaml-language-server: $schema=https://schema.buildwithfern.dev/docs-yml.json
-
 instances:
   - url: inpeace-test.docs.buildwithfern.com
-
-title: InPeace Docs
-
+title: Fern Docs Starter
 layout:
   searchbar-placement: header
   page-width: full
   tabs-placement: header
-
 tabs:
   home:
     display-name: Docs
@@ -17,7 +12,6 @@ tabs:
   API Reference:
     display-name: API Reference
     icon: puzzle
-
 navigation:
   - tab: home
     layout:
@@ -41,6 +35,8 @@ navigation:
           - page: Support
             path: docs/pages/support.mdx
             icon: fa-duotone fa-headset
+          - page: Test Page
+            path: ./docs/pages/test-page.mdx
       - section: Changelog
         contents:
           - changelog: docs/changelog
@@ -51,8 +47,16 @@ navigation:
           - page: API reference
             path: docs/pages/api-reference-overview.mdx
             icon: fa-duotone fa-book
-      - api: API InPeace
-
+      - api: Plant Store API
+        layout:
+          - section: Plants
+            referenced-packages:
+              - plant
+            contents: []
+          - section: Users
+            referenced-packages:
+              - user
+            contents: []
 navbar-links:
   - type: minimal
     text: Fork this repo
@@ -62,31 +66,22 @@ navbar-links:
     url: https://dashboard.buildwithfern.com
   - type: github
     value: https://github.com/fern-api/fern
-      
 colors:
   accent-primary:
-    dark: "#1DA1D9"
-    light: "#1DA1D9"
+    dark: '#70E155'
+    light: '#008700'
   background:
-    dark: "#111113"
-    light: "#F8FCFE"
-  border:
-    dark: "#2A2F33"
-    light: "#CAD3D7"
-
+    dark: '#111113'
+    light: '#FFFFFF'
 theme:
   page-actions: toolbar
   footer-nav: minimal
-
 logo:
-  dark: docs/assets/logo-inpeace.png
-  light: docs/assets/logo-inpeace.png
-  height: 28
-  href: https://inpeaceapp.com
-
+  dark: docs/assets/logo-dark.svg
+  light: docs/assets/logo.svg
+  height: 20
+  href: https://buildwithfern.com
 favicon: docs/assets/favicon.svg
-
 css: styles.css
-
 metadata:
   og:dynamic: true
