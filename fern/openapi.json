@@ -1,0 +1,1006 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API InPeace",
+    "version": "1.0.0",
+    "description": "Documentação da API de integração da plataforma InPeace.\n\nO fluxo básico é: autenticar com a sua **API Key** em `/api/v1/security/api-key-login-check`, receber o `token` (JWT) e o `refreshToken`, e enviar o JWT no header `Authorization: Bearer {token}` nas demais rotas."
+  },
+  "servers": [
+    {
+      "url": "https://seu-dominio.inpeaceapp.com",
+      "description": "Ambiente InPeace (troque pelo host do seu ambiente)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Autenticação",
+      "description": "Troca da API Key por JWT e renovação do token."
+    },
+    {
+      "name": "Usuários",
+      "description": "Consulta, criação e edição de pessoas (membros e visitantes) de uma igreja."
+    },
+    {
+      "name": "Jornadas Espirituais",
+      "description": "Etapas da jornada espiritual configuradas na igreja e jornada de cada usuário."
+    }
+  ],
+  "paths": {
+    "/api/v1/security/api-key-login-check": {
+      "get": {
+        "operationId": "autenticar-api-key",
+        "summary": "Autenticar com API Key",
+        "description": "Troca a API Key do usuário por um **JWT** e um **refreshToken**.\n\nSuper admins não autenticam por aqui (não possuem API Key); eles usam `/api/v1/security/login_check` com e-mail e senha.\n\nUse o `token` retornado no header `Authorization: Bearer {token}` das demais rotas e o `refreshToken` em [Renovar token](/reference/api/renovar-token) quando o JWT expirar.",
+        "tags": [
+          "Autenticação"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Autenticado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API Key ausente, desconhecida, revogada ou pertencente a um super admin."
+          }
+        }
+      }
+    },
+    "/api/v1/security/token/refresh": {
+      "post": {
+        "operationId": "renovar-token",
+        "summary": "Renovar token",
+        "description": "Gera um novo JWT a partir do `refreshToken` recebido na autenticação.",
+        "tags": [
+          "Autenticação"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refreshToken"
+                ],
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "description": "Refresh token obtido na autenticação."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Novo token gerado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refresh token inválido ou expirado."
+          }
+        }
+      }
+    },
+    "/admin/v1/churches/{church}/usuario": {
+      "get": {
+        "operationId": "listar-usuarios",
+        "summary": "Listar usuários",
+        "description": "Retorna a lista paginada de pessoas da igreja, com filtros.",
+        "tags": [
+          "Usuários"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Church"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Filtra por nome, e-mail, telefone ou número de membro.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Página de resultados.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Quantidade de registros por página.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Coluna de ordenação.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "name",
+                "email",
+                "dataNascimento",
+                "telefone",
+                "ativo"
+              ]
+            }
+          },
+          {
+            "name": "sortDirection",
+            "in": "query",
+            "description": "Direção da ordenação.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ],
+              "default": "ASC"
+            }
+          },
+          {
+            "name": "igreja",
+            "in": "query",
+            "description": "Filtra pelo ID da igreja.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "organizacao",
+            "in": "query",
+            "description": "Filtra pelo ID da organização. Disponível apenas para super admin.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "perfilAcesso",
+            "in": "query",
+            "description": "Filtra pelo perfil de acesso.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ROLE_ADMIN",
+                "ROLE_ADMIN_CONTENT",
+                "ROLE_CELL_ADMIN",
+                "ROLE_EVENT",
+                "ROLE_FINANCIAL_ADMIN"
+              ]
+            }
+          },
+          {
+            "name": "ativo",
+            "in": "query",
+            "description": "Filtra usuários ativos ou inativos.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "flagBatizado",
+            "in": "query",
+            "description": "Filtra usuários batizados.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "flagEmailValidado",
+            "in": "query",
+            "description": "Filtra usuários com e-mail verificado.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "flagParticipaCelula",
+            "in": "query",
+            "description": "`true`: possui ao menos um vínculo atual (participante, líder ou co-líder) com um grupo ativo da igreja. `false`: sem vínculo atual, inclusive quem só participou no passado. Ausente ou vazio: sem filtro. Qualquer outro valor retorna 400.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "dataCadastroInicio",
+            "in": "query",
+            "description": "Início do período de cadastro.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "dataCadastroFim",
+            "in": "query",
+            "description": "Fim do período de cadastro.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "jornadasEspirituaisIgreja",
+            "in": "query",
+            "description": "Filtra pela jornada espiritual atual do membro. Aceita vários valores; use o `uuid` retornado em [Listar jornadas da igreja](/reference/api/listar-jornadas-igreja).",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "style": "form",
+            "explode": true
+          },
+          {
+            "name": "exibirSemJornada",
+            "in": "query",
+            "description": "Inclui na listagem os usuários que ainda não possuem jornada.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "filtrarPorJornada",
+            "in": "query",
+            "description": "Habilita o filtro por jornada (`jornadasEspirituaisIgreja`).",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "buscarTodasIgrejasPossuoAcesso",
+            "in": "query",
+            "description": "Busca em todas as igrejas às quais o usuário autenticado tem acesso.",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de usuários.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UsuarioResumo"
+                      }
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "description": "Dados de paginação."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Filtro inválido."
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "403": {
+            "description": "Sem permissão para visualizar usuários desta igreja."
+          }
+        }
+      },
+      "post": {
+        "operationId": "criar-usuario",
+        "summary": "Criar usuário",
+        "description": "Cria uma pessoa na igreja. Retorna o `id` do usuário criado.",
+        "tags": [
+          "Usuários"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Church"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsuarioInput"
+              },
+              "example": {
+                "nome": "Maria",
+                "sobrenome": "Silva",
+                "email": "maria@exemplo.com",
+                "telefone": "+5511999999999",
+                "dataAniversario": "1990-05-20",
+                "sexo": "F",
+                "origem": "panel",
+                "jornadasDoMembro": [
+                  {
+                    "data": "2026-01-15",
+                    "jornadaEspiritualIgreja": "uuid-da-jornada"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário criado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "example": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro de validação do formulário."
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "403": {
+            "description": "Sem permissão para criar usuários nesta igreja."
+          },
+          "422": {
+            "description": "E-mail ou documento já cadastrado na igreja.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "string",
+                      "description": "Mensagem do erro."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/v1/churches/{church}/usuario/{usuario}": {
+      "get": {
+        "operationId": "buscar-usuario",
+        "summary": "Buscar usuário",
+        "description": "Retorna os dados completos de um usuário, incluindo endereços, documentos e grupos atuais.",
+        "tags": [
+          "Usuários"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Church"
+          },
+          {
+            "$ref": "#/components/parameters/Usuario"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do usuário.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Usuário com todos os dados."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "403": {
+            "description": "Sem permissão para visualizar este usuário."
+          },
+          "404": {
+            "description": "Usuário não encontrado."
+          }
+        }
+      },
+      "put": {
+        "operationId": "editar-usuario",
+        "summary": "Editar usuário",
+        "description": "Atualiza os dados de uma pessoa. O corpo aceita os mesmos campos de [Criar usuário](/reference/api/criar-usuario), exceto `origem`.",
+        "tags": [
+          "Usuários"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Church"
+          },
+          {
+            "$ref": "#/components/parameters/Usuario"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsuarioInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuário atualizado."
+          },
+          "400": {
+            "description": "Erro de validação do formulário."
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "403": {
+            "description": "Sem permissão para editar este usuário."
+          },
+          "404": {
+            "description": "Usuário não encontrado."
+          },
+          "422": {
+            "description": "E-mail ou documento já cadastrado na igreja, ou e-mail que não pode ser alterado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "string",
+                      "description": "Mensagem do erro."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/v1/churches/{church}/usuario/{usuario}/spiritual-journeys": {
+      "get": {
+        "operationId": "listar-jornadas-usuario",
+        "summary": "Listar jornadas do usuário",
+        "description": "Retorna o histórico de jornada espiritual de um usuário.",
+        "tags": [
+          "Jornadas Espirituais"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Church"
+          },
+          {
+            "$ref": "#/components/parameters/Usuario"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jornadas do usuário.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "403": {
+            "description": "Sem permissão para visualizar este usuário."
+          },
+          "404": {
+            "description": "Usuário não encontrado."
+          }
+        }
+      }
+    },
+    "/admin/v1/churches/{church}/spiritual-journeys": {
+      "get": {
+        "operationId": "listar-jornadas-igreja",
+        "summary": "Listar jornadas da igreja",
+        "description": "Retorna todas as etapas de jornada espiritual da igreja (ativas e inativas), com a quantidade de pessoas em cada uma.",
+        "tags": [
+          "Jornadas Espirituais"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Church"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jornadas da igreja.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/JornadaIgreja"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "403": {
+            "description": "Sem permissão para visualizar as jornadas desta igreja."
+          }
+        }
+      }
+    },
+    "/admin/v1/churches/{church}/spiritual-journeys/active": {
+      "get": {
+        "operationId": "listar-jornadas-ativas-igreja",
+        "summary": "Listar jornadas ativas da igreja",
+        "description": "Retorna somente as etapas de jornada espiritual ativas. São as únicas aceitas em `jornadasDoMembro` ao criar ou editar um usuário.",
+        "tags": [
+          "Jornadas Espirituais"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Church"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jornadas ativas da igreja.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/JornadaIgreja"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "403": {
+            "description": "Sem permissão para visualizar as jornadas desta igreja."
+          }
+        }
+      }
+    },
+    "/admin/v1/churches/{church}/spiritual-journeys/{uuid}": {
+      "get": {
+        "operationId": "buscar-jornada-igreja",
+        "summary": "Buscar jornada da igreja",
+        "description": "Retorna uma etapa de jornada espiritual da igreja.",
+        "tags": [
+          "Jornadas Espirituais"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Church"
+          },
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "description": "UUID da jornada.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jornada encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/JornadaIgreja"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido."
+          },
+          "403": {
+            "description": "Sem permissão para visualizar esta jornada."
+          },
+          "404": {
+            "description": "Jornada não encontrada."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY",
+        "description": "API Key em texto puro emitida para o usuário."
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT obtido em `/api/v1/security/api-key-login-check`."
+      }
+    },
+    "parameters": {
+      "Church": {
+        "name": "church",
+        "in": "path",
+        "required": true,
+        "description": "Slug da igreja.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Usuario": {
+        "name": "usuario",
+        "in": "path",
+        "required": true,
+        "description": "ID do usuário.",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "schemas": {
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "JWT. Enviar como `Authorization: Bearer {token}`."
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Token usado para obter um novo JWT sem reenviar a API Key."
+          }
+        }
+      },
+      "UsuarioResumo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "nomeCompleto": {
+            "type": "string",
+            "example": "Maria Silva"
+          },
+          "numeroMembro": {
+            "type": "string",
+            "example": "123"
+          },
+          "email": {
+            "type": "string",
+            "example": "maria@exemplo.com"
+          },
+          "isEmailVerificado": {
+            "type": "string",
+            "example": "1"
+          },
+          "dataNascimento": {
+            "type": "string",
+            "example": "1990-05-20T00:00:00+00:00"
+          },
+          "telefone": {
+            "type": "string",
+            "example": "+55 11 99999-9999"
+          },
+          "igreja": {
+            "type": "string",
+            "example": "Igreja Exemplo"
+          },
+          "isAtivo": {
+            "type": "boolean",
+            "example": true
+          },
+          "imageName": {
+            "type": "string",
+            "example": "https://dominio.com/images/foto.png"
+          },
+          "roles": {
+            "type": "string",
+            "example": "ROLE_EXAMPLE"
+          }
+        }
+      },
+      "UsuarioInput": {
+        "type": "object",
+        "required": [
+          "nome",
+          "sobrenome"
+        ],
+        "properties": {
+          "nome": {
+            "type": "string",
+            "example": "Maria"
+          },
+          "sobrenome": {
+            "type": "string",
+            "example": "Silva"
+          },
+          "tipo": {
+            "type": "string",
+            "description": "Tipo da pessoa. Padrão: `Visitante`.",
+            "example": "Membro"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "telefone": {
+            "type": "string",
+            "example": "+5511999999999"
+          },
+          "dataAniversario": {
+            "type": "string",
+            "format": "date",
+            "example": "1990-05-20"
+          },
+          "sexo": {
+            "type": "string",
+            "enum": [
+              "M",
+              "F"
+            ]
+          },
+          "cpf": {
+            "type": "string"
+          },
+          "nomeCompletoConjuge": {
+            "type": "string"
+          },
+          "dataCasamento": {
+            "type": "string",
+            "format": "date"
+          },
+          "numeroFilhos": {
+            "type": "integer"
+          },
+          "numeroMembro": {
+            "type": "string"
+          },
+          "ativarCarteirinhaMembro": {
+            "type": "boolean"
+          },
+          "receberVisita": {
+            "type": "boolean"
+          },
+          "batizado": {
+            "type": "boolean"
+          },
+          "dataBatismo": {
+            "type": "string",
+            "format": "date"
+          },
+          "observacaoBatismo": {
+            "type": "string"
+          },
+          "dataRecebimento": {
+            "type": "string",
+            "format": "date"
+          },
+          "observacaoRecebimento": {
+            "type": "string"
+          },
+          "endereco": {
+            "type": "object",
+            "properties": {
+              "logradouro": {
+                "type": "string"
+              },
+              "numero": {
+                "type": "string"
+              },
+              "complemento": {
+                "type": "string"
+              },
+              "bairro": {
+                "type": "string"
+              },
+              "cidade": {
+                "type": "string"
+              },
+              "estado": {
+                "type": "string"
+              },
+              "codigoPostal": {
+                "type": "string"
+              }
+            }
+          },
+          "origem": {
+            "type": "string",
+            "enum": [
+              "group",
+              "panel"
+            ],
+            "description": "Origem do cadastro. Aceito apenas na criação."
+          },
+          "jornadasDoMembro": {
+            "type": "array",
+            "description": "Etapas de jornada do membro. Apenas jornadas ativas da igreja são aceitas.",
+            "items": {
+              "type": "object",
+              "required": [
+                "data",
+                "jornadaEspiritualIgreja"
+              ],
+              "properties": {
+                "data": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2026-01-15"
+                },
+                "jornadaEspiritualIgreja": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "UUID da jornada, obtido em [Listar jornadas ativas da igreja](/reference/api/listar-jornadas-ativas-igreja)."
+                }
+              }
+            }
+          }
+        }
+      },
+      "JornadaIgreja": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ordem": {
+            "type": "integer",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Voluntário"
+          },
+          "descricao": {
+            "type": "string",
+            "example": "Membro que serve em alguma área da igreja"
+          },
+          "flagAtivo": {
+            "type": "boolean",
+            "example": true
+          },
+          "counter": {
+            "type": "integer",
+            "description": "Quantidade de pessoas cuja última jornada é esta.",
+            "example": 12
+          },
+          "quantidadeMarcos": {
+            "type": "integer",
+            "example": 3
+          }
+        }
+      }
+    }
+  }
+}
