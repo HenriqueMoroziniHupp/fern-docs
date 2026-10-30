@@ -65,7 +65,7 @@ colors:
     light: "#CAD3D7"
   card-background:
     dark: "#1A1B1E"
-    light: "#F2F4F6"
+    light: "#F8F9FA"
 
 theme:
   body: canvas
